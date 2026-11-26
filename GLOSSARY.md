@@ -22,6 +22,10 @@ _Avoid_: Score, grade, rating
 The average of the marks given to a proposal by its eligible assessors. It decides where the proposal sits in the mark range.
 _Avoid_: Average score, overall mark
 
+**Mark Tercile**:
+One of three equal-sized groups (high, middle, low) that proposals fall into when ranked by Mean Mark.
+_Avoid_: Band, third, bucket
+
 ### Eligibility
 
 **Conflict**:

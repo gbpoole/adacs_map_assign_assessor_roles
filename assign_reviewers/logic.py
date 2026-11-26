@@ -50,6 +50,24 @@ class Problem:
         return self.message if self.index is None else f"proposal at position {self.index}: {self.message}"
 
 
+@dataclass(frozen=True)
+class AssessorLoad:
+    """How many roles one assessor holds across all proposals.
+
+    ``leads_by_tercile`` counts their Leads in the (high, middle, low) third
+    of proposals ranked by Mean Mark.
+    """
+
+    assessor: str
+    leads: int
+    co_assessments: int
+    leads_by_tercile: tuple[int, int, int]
+
+    @property
+    def total(self) -> int:
+        return self.leads + self.co_assessments
+
+
 class AssignmentError(Exception):
     """Base class: the inputs cannot produce a valid assignment.
 
@@ -96,6 +114,30 @@ def mark_order(proposals: Sequence[Proposal]) -> list[int]:
         range(len(proposals)),
         key=lambda i: (means[i] is None, -(means[i] or 0.0)),
     )
+
+
+def summarise_load(
+    assessors: Sequence[str],
+    proposals: Sequence[Proposal],
+    leads: Sequence[str],
+    co_assessors: Sequence[Sequence[str]],
+) -> list[AssessorLoad]:
+    """Load per assessor, parallel to ``assessors``, for an assignment from ``assign``."""
+    order = mark_order(proposals)
+    tercile = {i: rank * 3 // len(order) for rank, i in enumerate(order)}
+    loads = []
+    for a in assessors:
+        led = [i for i, lead in enumerate(leads) if lead == a]
+        by_tercile = tuple(sum(tercile[i] == t for i in led) for t in range(3))
+        loads.append(
+            AssessorLoad(
+                assessor=a,
+                leads=len(led),
+                co_assessments=sum(a in cos for cos in co_assessors),
+                leads_by_tercile=by_tercile,
+            )
+        )
+    return loads
 
 
 def assign(

@@ -167,14 +167,16 @@ def print_load(
     cos: list[list[str]],
 ) -> None:
     """Per-assessor Load, with Leads split by thirds of the Mean Mark ranking."""
-    order = logic.mark_order(proposals)
-    tercile = {i: rank * 3 // len(order) for rank, i in enumerate(order)}
-    rows = []
-    for a in assessors:
-        led = [i for i, lead in enumerate(leads) if lead == a]
-        n_co = sum(a in c for c in cos)
-        by_third = [sum(tercile[i] == t for i in led) for t in range(3)]
-        rows.append([a, str(len(led)), str(n_co), str(len(led) + n_co), *map(str, by_third)])
+    rows = [
+        [
+            load.assessor,
+            str(load.leads),
+            str(load.co_assessments),
+            str(load.total),
+            *map(str, load.leads_by_tercile),
+        ]
+        for load in logic.summarise_load(assessors, proposals, leads, cos)
+    ]
     _print_table(
         ["Assessor", "Lead", "Co", "Total", "Lead-High", "Lead-Mid", "Lead-Low"],
         rows,

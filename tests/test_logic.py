@@ -14,6 +14,7 @@ from assign_reviewers.logic import (
     is_eligible,
     mark_order,
     mean_mark,
+    summarise_load,
 )
 
 ASSESSORS = ["A", "B", "C", "D", "E", "F"]
@@ -85,6 +86,16 @@ def test_pairings_vary():
     leads, cos = assign(ASSESSORS, proposals)
     pairs = Counter(frozenset(p) for lead, c in zip(leads, cos) for p in combinations([lead, *c], 2))
     assert len(pairs) == 15  # every possible pair of 6 assessors occurs
+
+
+def test_summarise_load():
+    proposals = make([{"A": 9}, {"A": 1}, {"A": 5}])  # Mean Mark ranks: P0 high, P2 mid, P1 low
+    loads = summarise_load(["A", "B", "C"], proposals, ["A", "A", "B"], [["B", "C"], ["C"], []])
+    assert [(l.assessor, l.leads, l.co_assessments, l.total, l.leads_by_tercile) for l in loads] == [
+        ("A", 2, 0, 2, (1, 0, 1)),
+        ("B", 1, 1, 2, (0, 1, 0)),
+        ("C", 0, 2, 2, (0, 0, 0)),
+    ]
 
 
 def test_deterministic_for_seed():
